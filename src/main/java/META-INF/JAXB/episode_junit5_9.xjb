@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<jaxb:bindings version="3.0" xmlns:jaxb="https://jakarta.ee/xml/ns/jaxb">
+  <!--
+
+Diese Datei wurde mit der Eclipse Implementation of JAXB, v3.0.2 generiert 
+Siehe https://eclipse-ee4j.github.io/jaxb-ri 
+Änderungen an dieser Datei gehen bei einer Neukompilierung des Quellschemas verloren. 
+Generiert: 2025.07.30 um 10:36:22 AM CEST 
+
+  -->
+  <jaxb:bindings scd="x-schema::">
+    <jaxb:schemaBindings map="false">
+      <jaxb:package name="com.microfocus.octane.gitlab.model.junit5"/>
+    </jaxb:schemaBindings>
+    <jaxb:bindings scd="failure">
+      <jaxb:class ref="com.microfocus.octane.gitlab.model.junit5.Failure"/>
+    </jaxb:bindings>
+    <jaxb:bindings scd="error">
+      <jaxb:class ref="com.microfocus.octane.gitlab.model.junit5.Error"/>
+    </jaxb:bindings>
+    <jaxb:bindings scd="properties">
+      <jaxb:class ref="com.microfocus.octane.gitlab.model.junit5.Properties"/>
+    </jaxb:bindings>
+    <jaxb:bindings scd="property">
+      <jaxb:class ref="com.microfocus.octane.gitlab.model.junit5.Property"/>
+    </jaxb:bindings>
+    <jaxb:bindings scd="testcase">
+      <jaxb:class ref="com.microfocus.octane.gitlab.model.junit5.Testcase"/>
+    </jaxb:bindings>
+    <jaxb:bindings scd="testsuite">
+      <jaxb:class ref="com.microfocus.octane.gitlab.model.junit5.Testsuite"/>
+    </jaxb:bindings>
+    <jaxb:bindings scd="testsuites">
+      <jaxb:class ref="com.microfocus.octane.gitlab.model.junit5.Testsuites"/>
+    </jaxb:bindings>
+  </jaxb:bindings>
+</jaxb:bindings>
+

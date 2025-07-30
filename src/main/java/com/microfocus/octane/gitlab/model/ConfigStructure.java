@@ -35,8 +35,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.DigestUtils;
 
-import javax.annotation.PostConstruct;
-import javax.validation.ValidationException;
+import jakarta.annotation.PostConstruct;
+import jakarta.validation.ValidationException;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;

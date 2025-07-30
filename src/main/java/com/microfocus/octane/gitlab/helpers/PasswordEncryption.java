@@ -70,9 +70,16 @@ public class PasswordEncryption {
         return Base64.getEncoder().encodeToString(bytes);
     }
 
-    public static String decrypt(String string) throws GeneralSecurityException, UnsupportedEncodingException {
-        String iv = string.split(":")[0];
-        String property = string.split(":")[1];
+    public static String decrypt(String encryptedString) throws GeneralSecurityException {
+        // Using modern split with limit for better performance and safety
+        String[] parts = encryptedString.split(":", 2);
+        if (parts.length != 2) {
+            throw new IllegalArgumentException("Invalid encrypted string format");
+        }
+        
+        String iv = parts[0];
+        String property = parts[1];
+        
         Cipher pbeCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
         pbeCipher.init(Cipher.DECRYPT_MODE, getSecretKeySpec(), new IvParameterSpec(base64Decode(iv)));
         return new String(pbeCipher.doFinal(base64Decode(property)), StandardCharsets.UTF_8);
