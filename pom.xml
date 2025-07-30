@@ -290,6 +290,7 @@
                 <executions>
                     <execution>
                         <id>junit5</id>
+                        <phase>generate-sources</phase>
                         <goals>
                             <goal>xjc</goal>
                         </goals>
@@ -298,9 +299,28 @@
                                 <source>src/main/resources/junit5.xsd</source>
                             </sources>
                             <packageName>com.microfocus.octane.gitlab.model.junit5</packageName>
-                            <outputDirectory>src/main/java</outputDirectory>
+                            <outputDirectory>target/generated-sources/jaxb</outputDirectory>
                             <clearOutputDir>false</clearOutputDir>
                             <generateEpisode>false</generateEpisode>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.6.0</version>
+                <executions>
+                    <execution>
+                        <id>add-source</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>target/generated-sources/jaxb</source>
+                            </sources>
                         </configuration>
                     </execution>
                 </executions>
