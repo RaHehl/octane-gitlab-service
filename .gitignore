@@ -105,3 +105,4 @@ build/
 
 # JAXB generated files
 **/META-INF/JAXB/
+src/main/java/**/junit5/

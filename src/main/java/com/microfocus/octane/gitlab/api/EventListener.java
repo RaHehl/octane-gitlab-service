@@ -9,20 +9,7 @@
  * omissions contained herein. The information contained herein is subject
  * to change without notice.
  *
-     private String getProjectFullPath(JSONObject event) {
-        try {
-            if (isPipelineEvent(event)) {
-                return URI.create(event.getJSONObject("project").getString("web_url")).toURL().getPath().substring(1).toLowerCase();
-            }
-
-            // I couldn't find any other suitable property rather then repository.homepage.
-            // But this one may potentially cause a defect with external repos.
-            return URI.create(event.getJSONObject("repository").getString("homepage")).toURL().getPath().substring(1).toLowerCase();
-        } catch (MalformedURLException e) {
-            log.warn("Failed to return the project full path, using an empty string as default", e);
-            return "";
-        }
-    }ecifically indicated otherwise, this document contains
+ * Except as specifically indicated otherwise, this document contains
  * confidential information and a valid license is required for possession,
  * use or copying. If this work is provided to the U.S. Government,
  * consistent with FAR 12.211 and 12.212, Commercial Computer Software,
