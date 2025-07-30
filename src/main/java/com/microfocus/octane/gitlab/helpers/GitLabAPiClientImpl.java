@@ -35,7 +35,7 @@ import org.gitlab4j.api.GitLabApiClient;
 import org.gitlab4j.api.models.Variable;
 import org.json.JSONArray;
 
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;

@@ -45,8 +45,8 @@ import org.gitlab4j.api.models.Project;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.Transformer;
@@ -109,19 +109,17 @@ public class JunitTestResultsProvider {
                         Document doc = db.parse(new InputSource(new StringReader(artifact.getValue())));
                         String rootTagName = doc.getDocumentElement().getTagName().toLowerCase();
                         switch (rootTagName) {
-                            case "testsuites":
-                            case "testsuite":
+                            case "testsuites", "testsuite" -> {
                                 unmarshallAndAddToResults(result, jaxbContext, artifact.getValue());
-                                break;
-                            case "test-run":
-                            case "test-results":
+                            }
+                            case "test-run", "test-results" -> {
                                 ByteArrayOutputStream os = new ByteArrayOutputStream();
                                 nunitTransformer.transform(new StreamSource(new StringReader(artifact.getValue())), new StreamResult(os));
                                 unmarshallAndAddToResults(result, jaxbContext, os.toString());
-                                break;
-                            default:
-                                log.error(String.format("Artifact %s: unknown test result format that starts with the <%s> tag", artifact.getKey(), rootTagName));
-                                break;
+                            }
+                            default -> {
+                                log.error("Artifact {}: unknown test result format that starts with the <{}> tag", artifact.getKey(), rootTagName);
+                            }
                         }
                     } catch (Exception e) {
                         log.warn("Failed to create a test result list based on the job artifact: " + artifact.getKey(), e);

@@ -75,12 +75,12 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.Response;
 import javax.xml.transform.TransformerConfigurationException;
 import java.io.File;
 import java.io.FileInputStream;
@@ -89,6 +89,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
@@ -307,7 +308,8 @@ public class EventListener {
     private long getPipelineId(JSONObject event) {
         if (isBuildEvent(event)) {
             return event.getLong("pipeline_id");
-        } else if (isPipelineEvent(event)) {
+        }
+        if (isPipelineEvent(event)) {
             return event.getJSONObject("object_attributes").getLong("id");
         }
         throw new RuntimeException("The pipeline id can only be extracted from pipeline and build events.");
@@ -454,21 +456,16 @@ public class EventListener {
     }
 
     private Long calculateDuration(CIEventType eventType, Object duration) {
-        if (eventType == CIEventType.STARTED || Objects.equals(duration, null)) {
+        if (eventType == CIEventType.STARTED || duration == null) {
             return 0L;
         }
 
-        if (duration instanceof Double) {
-            return Math.round(1000 * (Double) duration);
-        }
-        if (duration instanceof BigDecimal) {
-            return (long) Math.round(1000 * ((BigDecimal) duration).intValue());
-        }
-
-        return (long) Math.round(1000 * (Integer) duration);
-
-        // return Math.round(duration instanceof Double ? 1000* (Double) duration : 1000 * (Integer) duration);
-
+        return switch (duration) {
+            case Double d -> Math.round(1000 * d);
+            case BigDecimal bd -> (long) Math.round(1000 * bd.doubleValue());
+            case Integer i -> (long) Math.round(1000 * i);
+            default -> throw new IllegalArgumentException("Unsupported duration type: " + duration.getClass());
+        };
     }
 
     private Long getStartTime(JSONObject event, Object duration) {
@@ -527,19 +524,13 @@ public class EventListener {
     }
 
     private CIBuildResult convertCiBuildResult(String status) {
-        if (status.equals("success")) {
-            return CIBuildResult.SUCCESS;
-        }
-        if (status.equals("failed")) {
-            return CIBuildResult.FAILURE;
-        }
-        if (status.equals("drop") || status.equals("skipped") || status.equals("canceled")) {
-            return CIBuildResult.ABORTED;
-        }
-        if (status.equals("unstable")) {
-            return CIBuildResult.UNSTABLE;
-        }
-        return CIBuildResult.UNAVAILABLE;
+        return switch (status) {
+            case "success" -> CIBuildResult.SUCCESS;
+            case "failed" -> CIBuildResult.FAILURE;
+            case "drop", "skipped", "canceled" -> CIBuildResult.ABORTED;
+            case "unstable" -> CIBuildResult.UNSTABLE;
+            default -> CIBuildResult.UNAVAILABLE;
+        };
     }
 
     private String getStatus(JSONObject event) {
@@ -557,13 +548,10 @@ public class EventListener {
     }
 
     private String getCiDisplayName(JSONObject event) {
-        if (isPipelineEvent(event)) {
+        if (isPipelineEvent(event) || isDeleteBranchEvent(event)) {
             return getBranchName(event);
-        } else if (isDeleteBranchEvent(event)) {
-            return getBranchName(event);
-        } else {
-            return event.getString("build_name");
         }
+        return event.getString("build_name");
     }
 
     private String getProjectCiId(JSONObject event) {
@@ -610,12 +598,12 @@ public class EventListener {
     private String getProjectFullPath(JSONObject event) {
         try {
             if (isPipelineEvent(event)) {
-                return new URL(event.getJSONObject("project").getString("web_url")).getPath().substring(1).toLowerCase();
+                return URI.create(event.getJSONObject("project").getString("web_url")).toURL().getPath().substring(1).toLowerCase();
             }
 
             // I couldn't find any other suitable property rather then repository.homepage.
             // But this one may potentially cause a defect with external repos.
-            return new URL(event.getJSONObject("repository").getString("homepage")).getPath().substring(1).toLowerCase();
+            return URI.create(event.getJSONObject("repository").getString("homepage")).toURL().getPath().substring(1).toLowerCase();
         } catch (MalformedURLException e) {
             log.warn("Failed to return the project full path, using an empty string as default", e);
             return "";
@@ -707,54 +695,51 @@ public class EventListener {
     private long getEventTargetObjectId(JSONObject event) {
         if (isMergeRequestEvent(event)) {
             return event.getJSONObject("object_attributes").getLong("iid");
-        } else if (isPipelineEvent(event)) {
-            return event.getJSONObject("object_attributes").getLong("id");
-        } else if (isDeleteBranchEvent(event)) {
-            return event.getLong("project_id");
-        } else {
-            return event.getLong("build_id");
         }
+        if (isPipelineEvent(event)) {
+            return event.getJSONObject("object_attributes").getLong("id");
+        }
+        if (isDeleteBranchEvent(event)) {
+            return event.getLong("project_id");
+        }
+        return event.getLong("build_id");
     }
 
     private MergeRequestEventType getMREventType(JSONObject event) {
         String mergeRequestEventStatus = getStatus(event);
-        switch (mergeRequestEventStatus) {
-            case "open":
-                return MergeRequestEventType.OPEN;
-            case "update":
-                return MergeRequestEventType.UPDATE;
-            case "close":
-                return MergeRequestEventType.CLOSE;
-            case "reopen":
-                return MergeRequestEventType.REOPEN;
-            case "merge":
-                return MergeRequestEventType.MERGE;
-            default:
-                return MergeRequestEventType.UNKNOWN;
-        }
+        return switch (mergeRequestEventStatus) {
+            case "open" -> MergeRequestEventType.OPEN;
+            case "update" -> MergeRequestEventType.UPDATE;
+            case "close" -> MergeRequestEventType.CLOSE;
+            case "reopen" -> MergeRequestEventType.REOPEN;
+            case "merge" -> MergeRequestEventType.MERGE;
+            default -> MergeRequestEventType.UNKNOWN;
+        };
     }
 
     private CIEventType getEventType(JSONObject event) {
         String statusStr = getStatus(event);
+        
+        // Handle pipeline-specific status first
         if (isPipelineEvent(event)) {
-            if (statusStr.equals("pending")) {
-                return CIEventType.STARTED;
-            }
-            if (statusStr.equals("running")) {
-                return CIEventType.UNDEFINED;
-            }
+            return switch (statusStr) {
+                case "pending" -> CIEventType.STARTED;
+                case "running" -> CIEventType.UNDEFINED;
+                default -> getCommonEventType(statusStr);
+            };
         }
-        if (Arrays.asList(new String[]{"process", "enqueue", "pending", "created"}).contains(statusStr)) {
-            return CIEventType.QUEUED;
-        } else if (Arrays.asList(new String[]{"success", "failed", "canceled", "skipped"}).contains(statusStr)) {
-            return CIEventType.FINISHED;
-        } else if (Arrays.asList(new String[]{"running", "manual"}).contains(statusStr)) {
-            return CIEventType.STARTED;
-        } else if (statusStr.equals("delete")) {
-            return CIEventType.DELETED;
-        } else {
-            return CIEventType.UNDEFINED;
-        }
+        
+        return getCommonEventType(statusStr);
+    }
+    
+    private CIEventType getCommonEventType(String statusStr) {
+        return switch (statusStr) {
+            case "process", "enqueue", "pending", "created" -> CIEventType.QUEUED;
+            case "success", "failed", "canceled", "skipped" -> CIEventType.FINISHED;
+            case "running", "manual" -> CIEventType.STARTED;
+            case "delete" -> CIEventType.DELETED;
+            default -> CIEventType.UNDEFINED;
+        };
     }
 
     private boolean isPipelineEvent(JSONObject event) {
@@ -776,15 +761,21 @@ public class EventListener {
 
     }
     private String getLastJobEventNameOfPipeline(JSONObject event) {
+        JSONArray buildsArray = event.getJSONArray("builds");
+        
         String lastJobEvent = "";
         long maxId = 0;
-        JSONArray buildsArray = event.getJSONArray("builds");
+        
         for (int i = 0; i < buildsArray.length(); i++) {
-            if (buildsArray.getJSONObject(i).getLong("id") > maxId) {
-                maxId = buildsArray.getJSONObject(i).getLong("id");
-                lastJobEvent = buildsArray.getJSONObject(i).getString("name");
+            JSONObject build = buildsArray.getJSONObject(i);
+            long currentId = build.getLong("id");
+            
+            if (currentId > maxId) {
+                maxId = currentId;
+                lastJobEvent = build.getString("name");
             }
         }
+        
         return lastJobEvent;
     }
 

@@ -47,25 +47,33 @@ public class TestResultsCleanUpRunnable implements Runnable {
     private String testResultsFolderPath="";
     static final Logger log = LogManager.getLogger(TestResultsCleanUpRunnable.class);
 
-    public TestResultsCleanUpRunnable(String folderPath){
-        if(folderPath!=null && !folderPath.isEmpty()){
+    public TestResultsCleanUpRunnable(String folderPath) {
+        if (folderPath != null && !folderPath.isEmpty()) {
             testResultsFolderPath = folderPath;
         }
     }
 
     public void deleteFiles() {
         File folder = TestResultsHelper.getTestResultFolderFullPath(testResultsFolderPath);
-        for (final File fileEntry : folder.listFiles()) {
-            if (System.currentTimeMillis() - fileEntry.lastModified() > TIME) {
+        File[] files = folder.listFiles();
+        
+        if (files == null) {
+            log.warn("Unable to list files in directory: {}", folder.getAbsolutePath());
+            return;
+        }
+        
+        long currentTime = System.currentTimeMillis();
+        
+        for (File fileEntry : files) {
+            if (currentTime - fileEntry.lastModified() > TIME) {
                 try {
                     FileUtils.deleteDirectory(fileEntry);
-                    log.info("delete test results old file:"+ fileEntry.getName());
+                    log.info("Deleted old test results file: {}", fileEntry.getName());
                 } catch (IOException e) {
-                   log.warn("enable to delete tests results directory:"+fileEntry.getName()+"," +e.getMessage());
+                    log.warn("Unable to delete test results directory: {} - {}", fileEntry.getName(), e.getMessage());
                 }
-
             } else {
-                System.out.println(fileEntry.getName());
+                log.debug("Keeping recent file: {}", fileEntry.getName());
             }
         }
     }

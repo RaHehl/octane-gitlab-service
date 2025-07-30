@@ -36,7 +36,7 @@ import com.microfocus.octane.gitlab.ui.HomeController;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.springframework.context.annotation.Configuration;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 
 @Configuration
 public class JerseyConfig extends ResourceConfig {
