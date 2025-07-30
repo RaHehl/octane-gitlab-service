@@ -300,6 +300,7 @@
                             <packageName>com.microfocus.octane.gitlab.model.junit5</packageName>
                             <outputDirectory>src/main/java</outputDirectory>
                             <clearOutputDir>false</clearOutputDir>
+                            <generateEpisode>false</generateEpisode>
                         </configuration>
                     </execution>
                 </executions>
