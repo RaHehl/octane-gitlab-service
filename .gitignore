@@ -102,3 +102,6 @@ build/
 *.jks
 *.keystore
 *.truststore
+
+# JAXB generated files
+**/META-INF/JAXB/
